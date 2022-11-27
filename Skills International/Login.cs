@@ -1,21 +1,14 @@
-﻿using MySql.Data.MySqlClient;
+﻿
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Data.SqlClient;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Skills_International
 {
     public partial class Login : Form
     {
-        SQL_CONNECTION mysql = new SQL_CONNECTION();
-        MySqlConnection connection;
+        SQL_CONNECTION sql = new SQL_CONNECTION();
+        SqlConnection connection;
 
         public Login()
         {
@@ -33,22 +26,19 @@ namespace Skills_International
             bool is_Correct = false;
             try
             {
-                connection = new MySqlConnection(mysql.ConnectionString.ToString());
-                MySqlCommand cmd_login = new MySqlCommand("select * from student.logins;", connection);
-                MySqlDataReader comboReader;
-
+                connection = new SqlConnection(sql.ConnectionString.ToString());
                 connection.Open();
+                SqlCommand cmd_login = new SqlCommand("select * from logins;", connection);
+                SqlDataReader comboReader = cmd_login.ExecuteReader(); ;
 
-                comboReader = cmd_login.ExecuteReader();
                 while (comboReader.Read())
                 {
-                    if (txt_username.Text == comboReader.GetString("username") && txt_password.Text == comboReader.GetString("password"))
+                    if (txt_username.Text == comboReader.GetString(0) && txt_password.Text == comboReader.GetString(1))
                     {
                         is_Correct = true;
                     }
                     
                 }
-                connection.Close();
 
                 if (is_Correct)
                 {
@@ -62,9 +52,9 @@ namespace Skills_International
                 }
 
             }
-            catch
+            catch(Exception ex)
             {
-                MessageBox.Show(mysql.ERRORconnection);
+                MessageBox.Show(ex.Message);
             }
             finally
             {

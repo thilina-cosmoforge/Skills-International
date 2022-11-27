@@ -1,23 +1,13 @@
-﻿using MySql.Data.MySqlClient;
-using MySqlX.XDevAPI;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using System.Data.SqlClient;
 using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
 namespace Skills_International
 {
     public partial class Student_Registration : Form
     {
-        SQL_CONNECTION mysql = new SQL_CONNECTION();
-        MySqlConnection connection;
+        SQL_CONNECTION sql = new SQL_CONNECTION();
+        SqlConnection connection;
         public Student_Registration()
         {
             InitializeComponent();
@@ -32,21 +22,21 @@ namespace Skills_International
             RegNo_combo.ResetText();
             try
             {
-                connection = new MySqlConnection(mysql.ConnectionString.ToString());
-                MySqlCommand cmd_login = new MySqlCommand("select * from student.registration;", connection);
-                MySqlDataReader comboReader;
+                connection = new SqlConnection(sql.ConnectionString.ToString());
+                SqlCommand cmd_login = new SqlCommand("select * from registration;", connection);
+                SqlDataReader comboReader;
 
                 connection.Open();
 
                 comboReader = cmd_login.ExecuteReader();
                 while (comboReader.Read())
                 {
-                    RegNo_combo.Items.Add(comboReader.GetString("regNo"));
+                    RegNo_combo.Items.Add(comboReader.GetInt32(0).ToString());
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                MessageBox.Show(mysql.ERRORconnection);
+                MessageBox.Show(sql.ERRORconnection, ex.Message);
             }
             finally
             {
@@ -83,9 +73,9 @@ namespace Skills_International
         private bool exists()
         {
             bool yes = false;
-            connection = new MySqlConnection(mysql.ConnectionString.ToString());
-            MySqlCommand cmd_login = new MySqlCommand("select * from student.registration where regNo = '" + RegNo_combo.SelectedItem.ToString() + "';", connection);
-            MySqlDataReader comboReader;
+            connection = new SqlConnection(sql.ConnectionString.ToString());
+            SqlCommand cmd_login = new SqlCommand("select * from registration where regNo = '" + RegNo_combo.SelectedItem.ToString() + "';", connection);
+            SqlDataReader comboReader;
             connection.Open();
             comboReader = cmd_login.ExecuteReader();
             while (comboReader.Read())
@@ -102,25 +92,25 @@ namespace Skills_International
             {
                 try
                 {
-                    connection = new MySqlConnection(mysql.ConnectionString.ToString());
-                    MySqlCommand cmd_Insert =
-                        new MySqlCommand("insert into student.registration " +
+                    connection = new SqlConnection(sql.ConnectionString.ToString());
+                    SqlCommand cmd_Insert =
+                        new SqlCommand("insert into registration " +
                         "(regNo, firstName, lastName, dateOfBirth, gender, address, email, mobilePhone, homePhone, parentName, nic, contactNo) " +
                         "values(@reg, @fname, @lname, @dob, @gender, @addr, @email, @mobile, @home, @parent, @nic, @contact);", connection);
 
                     connection.Open();
-                    cmd_Insert.Parameters.Add("@reg", MySqlDbType.Int64).Value = RegNo_combo.Text;
-                    cmd_Insert.Parameters.Add("@fname", MySqlDbType.VarChar).Value = first_name_txt.Text;
-                    cmd_Insert.Parameters.Add("@lname", MySqlDbType.VarChar).Value = last_name_txt.Text;
-                    cmd_Insert.Parameters.Add("@dob", MySqlDbType.DateTime).Value = dob_picker.Value;
-                    cmd_Insert.Parameters.Add("@gender", MySqlDbType.String).Value = getGender();
-                    cmd_Insert.Parameters.Add("@addr", MySqlDbType.VarChar).Value = address_text.Text;
-                    cmd_Insert.Parameters.Add("@email", MySqlDbType.VarChar).Value = email_txt.Text;
-                    cmd_Insert.Parameters.Add("@mobile", MySqlDbType.Int64).Value = mobile_txt.Text;
-                    cmd_Insert.Parameters.Add("@home", MySqlDbType.Int64).Value = tele_txt.Text;
-                    cmd_Insert.Parameters.Add("@parent", MySqlDbType.VarChar).Value = parent_name_txt.Text;
-                    cmd_Insert.Parameters.Add("@nic", MySqlDbType.VarChar).Value = nic_txt.Text;
-                    cmd_Insert.Parameters.Add("@contact", MySqlDbType.Int64).Value = contact_no_txt.Text;
+                    cmd_Insert.Parameters.AddWithValue("@reg", RegNo_combo.Text);
+                    cmd_Insert.Parameters.AddWithValue("@fname", first_name_txt.Text);
+                    cmd_Insert.Parameters.AddWithValue("@lname", last_name_txt.Text);
+                    cmd_Insert.Parameters.AddWithValue("@dob", dob_picker.Value);
+                    cmd_Insert.Parameters.AddWithValue("@gender", getGender());
+                    cmd_Insert.Parameters.AddWithValue("@addr", address_text.Text);
+                    cmd_Insert.Parameters.AddWithValue("@email", email_txt.Text);
+                    cmd_Insert.Parameters.AddWithValue("@mobile", mobile_txt.Text);
+                    cmd_Insert.Parameters.AddWithValue("@home", tele_txt.Text);
+                    cmd_Insert.Parameters.AddWithValue("@parent", parent_name_txt.Text);
+                    cmd_Insert.Parameters.AddWithValue("@nic", nic_txt.Text);
+                    cmd_Insert.Parameters.AddWithValue("@contact", contact_no_txt.Text);
 
                     cmd_Insert.ExecuteNonQuery();
 
@@ -128,7 +118,7 @@ namespace Skills_International
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(mysql.ERRORconnection, ex.Source);                    
+                    MessageBox.Show(sql.ERRORconnection, ex.Message);                    
                 }
                 finally
                 {
@@ -146,23 +136,23 @@ namespace Skills_International
         {
             try
             {
-                connection = new MySqlConnection(mysql.ConnectionString.ToString());
-                MySqlCommand cmd_update = new MySqlCommand("update student.registration set " +
+                connection = new SqlConnection(sql.ConnectionString.ToString());
+                SqlCommand cmd_update = new SqlCommand("update registration set " +
                     "firstName=@fname, lastName=@lname, dateOfBirth=@dob, gender=@gender, address=@addr, email=@email, mobilePhone=@mobile, homePhone=@home, parentName=@parent, nic=@nic, contactNo=@contact " +
                     "where regNo = '" + RegNo_combo.SelectedItem.ToString() + "';", connection);
                 connection.Open();
 
-                cmd_update.Parameters.Add("@fname", MySqlDbType.VarChar).Value = first_name_txt.Text;
-                cmd_update.Parameters.Add("@lname", MySqlDbType.VarChar).Value = last_name_txt.Text;
-                cmd_update.Parameters.Add("@dob", MySqlDbType.DateTime).Value = dob_picker.Value;
-                cmd_update.Parameters.Add("@gender", MySqlDbType.String).Value = getGender();
-                cmd_update.Parameters.Add("@addr", MySqlDbType.VarChar).Value = address_text.Text;
-                cmd_update.Parameters.Add("@email", MySqlDbType.VarChar).Value = email_txt.Text;
-                cmd_update.Parameters.Add("@mobile", MySqlDbType.Int64).Value = mobile_txt.Text;
-                cmd_update.Parameters.Add("@home", MySqlDbType.Int64).Value = tele_txt.Text;
-                cmd_update.Parameters.Add("@parent", MySqlDbType.VarChar).Value = parent_name_txt.Text;
-                cmd_update.Parameters.Add("@nic", MySqlDbType.VarChar).Value = nic_txt.Text;
-                cmd_update.Parameters.Add("@contact", MySqlDbType.Int64).Value = contact_no_txt.Text;
+                cmd_update.Parameters.AddWithValue("@fname", first_name_txt.Text);
+                cmd_update.Parameters.AddWithValue("@lname", last_name_txt.Text);
+                cmd_update.Parameters.AddWithValue("@dob", dob_picker.Value);
+                cmd_update.Parameters.AddWithValue("@gender", getGender());
+                cmd_update.Parameters.AddWithValue("@addr", address_text.Text);
+                cmd_update.Parameters.AddWithValue("@email", email_txt.Text);
+                cmd_update.Parameters.AddWithValue("@mobile", mobile_txt.Text);
+                cmd_update.Parameters.AddWithValue("@home", tele_txt.Text);
+                cmd_update.Parameters.AddWithValue("@parent", parent_name_txt.Text);
+                cmd_update.Parameters.AddWithValue("@nic", nic_txt.Text);
+                cmd_update.Parameters.AddWithValue("@contact", contact_no_txt.Text);
 
                 cmd_update.ExecuteNonQuery();
 
@@ -170,7 +160,7 @@ namespace Skills_International
             }
             catch(Exception ex)
             {
-                MessageBox.Show(mysql.ERRORconnection, ex.Message);
+                MessageBox.Show(sql.ERRORconnection, ex.Message);
             }
             finally
             {
@@ -184,8 +174,8 @@ namespace Skills_International
         {
             try
             {
-                connection = new MySqlConnection(mysql.ConnectionString.ToString());
-                MySqlCommand cmd_delete = new MySqlCommand("delete from student.registration where regNo = '" + RegNo_combo.SelectedItem.ToString() + "';", connection);
+                connection = new SqlConnection(sql.ConnectionString.ToString());
+                SqlCommand cmd_delete = new SqlCommand("delete from registration where regNo = '" + RegNo_combo.SelectedItem.ToString() + "';", connection);
                 connection.Open();
                 DialogResult res = MessageBox.Show("Are you sure, Do you realy want to Delete this Record...?", "Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
                 if (res == DialogResult.Yes)
@@ -198,7 +188,7 @@ namespace Skills_International
             }
             catch (Exception ex)
             {
-                MessageBox.Show(mysql.ERRORconnection, ex.Message);
+                MessageBox.Show(sql.ERRORconnection, ex.Message);
             }
             finally
             {
@@ -213,26 +203,26 @@ namespace Skills_International
             update_btn.Enabled = true;
             try
             {
-                connection = new MySqlConnection(mysql.ConnectionString.ToString());
-                MySqlCommand cmd_login = new MySqlCommand("select * from student.registration where regNo = '" + RegNo_combo.SelectedItem + "';", connection);
-                MySqlDataReader comboReader;
+                connection = new SqlConnection(sql.ConnectionString.ToString());
+                SqlCommand cmd_login = new SqlCommand("select * from registration where regNo = '" + RegNo_combo.SelectedItem + "';", connection);
+                SqlDataReader comboReader;
 
                 connection.Open();
 
                 comboReader = cmd_login.ExecuteReader();
                 while (comboReader.Read())
                 {
-                    first_name_txt.Text = comboReader.GetString("firstName");
-                    last_name_txt.Text = comboReader.GetString("lastName");
-                    dob_picker.Value = comboReader.GetDateTime("dateOfBirth");
-                    setGender(comboReader.GetString("gender"));
-                    address_text.Text = comboReader.GetString("address");
-                    email_txt.Text = comboReader.GetString("email");
-                    mobile_txt.Text = comboReader.GetString("mobilePhone");
-                    tele_txt.Text = comboReader.GetString("homePhone");
-                    parent_name_txt.Text = comboReader.GetString("parentName");
-                    nic_txt.Text = comboReader.GetString("nic");
-                    contact_no_txt.Text = comboReader.GetString("contactNo");
+                    first_name_txt.Text = comboReader.GetString(1);
+                    last_name_txt.Text = comboReader.GetString(2);
+                    dob_picker.Value = comboReader.GetDateTime(3);
+                    setGender(comboReader.GetString(4));
+                    address_text.Text = comboReader.GetString(5);
+                    email_txt.Text = comboReader.GetString(6);
+                    mobile_txt.Text = comboReader.GetInt32(7).ToString();
+                    tele_txt.Text = comboReader.GetInt32(8).ToString();
+                    parent_name_txt.Text = comboReader.GetString(9);
+                    nic_txt.Text = comboReader.GetString(10);
+                    contact_no_txt.Text = comboReader.GetInt32(11).ToString();
 
                 }
             }
